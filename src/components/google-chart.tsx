@@ -20,7 +20,7 @@ export default function GoogleChart({ stockData }: GoogleChartProps) {
     <Chart
       chartType="LineChart"
       width="100%"
-      height="500px"
+      height="700px"
       data={chartData}
       options={{
         title: "Stock Price History",
