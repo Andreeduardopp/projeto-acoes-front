@@ -1,9 +1,9 @@
 "use client";
 import { useState } from "react";
-import StockInput from "@/components/stock-input";
-import GoogleChart from "@/components/google-chart";
-import SearchHistory from "@/components/search-history";
-import { fetchStockData } from "@/lib/api";
+import StockInput from "../components/stock-input";
+import GoogleChart from "../components/google-chart";
+import SearchHistory from "../components/search-history";
+import { fetchStockData } from "../lib/api";
 
 export default function Home() {
   const [stockData, setStockData] = useState<{ date: string; price: number }[]>([]);
