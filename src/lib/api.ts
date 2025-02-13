@@ -1,11 +1,13 @@
 import axios from "axios";
 
-export const fetchStockData = async (ticker: string) => {
+export const fetchStockData = async (ticker: string, startDate: string, endDate: string) => {
   try {
-    const response = await axios.get(`http://localhost:8000/api/stocks?ticker=${ticker}`);
-    return response.data; // Expected format: { ticker: "AAPL", data: [{ date: "2024-01-01", price: 180.5 }, ...] }
+    const response = await axios.get(`http://localhost:8000/api/stocks`, {
+      params: { ticker, start_date: startDate, end_date: endDate },
+    });
+    return response.data;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
-    console.error("Error fetching stock data:", error);
-    return null;
+    return { error: "Stock data not found!" }; 
   }
 };

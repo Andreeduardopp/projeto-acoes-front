@@ -7,26 +7,48 @@ import { fetchStockData } from "@/lib/api";
 export default function Home() {
   const [stockData, setStockData] = useState<{ date: string; price: number }[]>([]);
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [showSnackbar, setShowSnackbar] = useState(false);
 
-  const handleSearch = async (ticker: string) => {
+  const handleSearch = async (ticker: string, startDate: string, endDate: string) => {
     setLoading(true);
-    const data = await fetchStockData(ticker);
-    setStockData(data?.data || []);
+    
+    try {
+      const data = await fetchStockData(ticker, startDate, endDate);
+
+      if (!data || data?.error) {
+        setErrorMessage(data?.error || "Stock data not found!");
+        setShowSnackbar(true);
+        setStockData([]);
+      } else {
+        setStockData(data?.data || []);
+        setShowSnackbar(false);
+      }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error) {
+      setErrorMessage("API request failed. Check your network and try again.");
+      setShowSnackbar(true);
+    }
+
     setLoading(false);
   };
 
   return (
     <div className="flex h-screen">
-      {/* Left Side - Inputs */}
       <div className="w-1/4 bg-gray-100 p-6">
         <h2 className="text-lg font-semibold mb-4">Stock Search</h2>
         <StockInput onSearch={handleSearch} />
       </div>
 
-      {/* Right Side - Chart */}
       <div className="w-3/4 p-6 flex justify-center items-center">
         {loading ? <p>Loading...</p> : <GoogleChart stockData={stockData} />}
       </div>
+
+      {showSnackbar && (
+        <div className="fixed bottom-5 left-1/2 transform -translate-x-1/2 bg-red-600 text-white px-4 py-2 rounded shadow-lg transition-opacity duration-500">
+          {errorMessage}
+        </div>
+      )}
     </div>
   );
 }
