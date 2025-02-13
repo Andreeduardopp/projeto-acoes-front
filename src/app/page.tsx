@@ -2,6 +2,7 @@
 import { useState } from "react";
 import StockInput from "@/components/stock-input";
 import GoogleChart from "@/components/google-chart";
+import SearchHistory from "@/components/search-history";
 import { fetchStockData } from "@/lib/api";
 
 export default function Home() {
@@ -9,6 +10,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [showSnackbar, setShowSnackbar] = useState(false);
+  const [history, setHistory] = useState<{ ticker: string; startDate: string; endDate: string }[]>([]);
 
   const handleSearch = async (ticker: string, startDate: string, endDate: string) => {
     setLoading(true);
@@ -23,6 +25,10 @@ export default function Home() {
       } else {
         setStockData(data?.data || []);
         setShowSnackbar(false);
+        const newHistory = [{ ticker, startDate, endDate }, ...history].slice(0, 5);
+        setHistory(newHistory);
+        localStorage.setItem("searchHistory", JSON.stringify(newHistory));
+
       }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
@@ -35,9 +41,10 @@ export default function Home() {
 
   return (
     <div className="flex h-screen">
-      <div className="w-1/4 bg-gray-100 p-6">
+      <div className="w-1/4 bg-gray-100 p-6 flex flex-col">
         <h2 className="text-lg font-semibold mb-4">Stock Search</h2>
         <StockInput onSearch={handleSearch} />
+        <SearchHistory history={history} onSelect={handleSearch} />
       </div>
 
       <div className="w-3/4 p-6 flex justify-center items-center">

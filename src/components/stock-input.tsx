@@ -2,7 +2,7 @@
 import { useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { format } from "date-fns";
+import { format, subMonths, subYears } from "date-fns";
 
 interface StockInputProps {
   onSearch: (ticker: string, startDate: string, endDate: string) => void;
@@ -10,9 +10,26 @@ interface StockInputProps {
 
 export default function StockInput({ onSearch }: StockInputProps) {
   const [ticker, setTicker] = useState("");
-  const [startDate, setStartDate] = useState<Date | null>(new Date());
+  const [startDate, setStartDate] = useState<Date | null>(subMonths(new Date(), 1)); // Default: Last month
   const [endDate, setEndDate] = useState<Date | null>(new Date());
-  const [error, setError] = useState("");
+  const [error] = useState("");
+  const [preset, setPreset] = useState("1m"); // Default: Last month
+
+  const handlePresetChange = (value: string) => {
+    setPreset(value);
+
+    const today = new Date();
+    if (value === "1m") {
+      setStartDate(subMonths(today, 1));
+    } else if (value === "1y") {
+      setStartDate(subYears(today, 1));
+    } else if (value === "5y") {
+      setStartDate(subYears(today, 5));
+    } else {
+      setStartDate(null); // Allow manual selection
+    }
+    setEndDate(today);
+  };
 
   const handleSearch = () => {
     if (ticker.trim() && startDate && endDate) {
@@ -22,72 +39,76 @@ export default function StockInput({ onSearch }: StockInputProps) {
     }
   };
 
-  const validateInputs = (newStartDate: Date | null, newEndDate: Date | null, newTicker: string) => {
-    if (!newTicker.trim()) {
-      setError("Stock ticker is required.");
-      return;
-    }
-    if (!newStartDate || !newEndDate) {
-      setError("Both start and end dates are required.");
-      return;
-    }
-    if (newStartDate > newEndDate) {
-      setError("Start date cannot be after the end date.");
-      return;
-    }
-    setError("");
-  };
-
   return (
     <div className="flex flex-col gap-4">
+      {/* Stock Ticker Input */}
       <div>
-        <label className="block text-sm mb-2 text-gray-700 font-medium">Stock Ticker:</label>
+        <label className="block text-sm font-medium text-gray-700 ">Stock Ticker:</label>
         <input
           type="text"
           placeholder="Enter Stock Ticker (e.g., AAPL)"
           value={ticker}
-          onChange={(e) => {
-            setTicker(e.target.value);
-            validateInputs(startDate, endDate, e.target.value);
-          }}
-          className="border p-2 rounded-md w-full text-gray-700"
+          onChange={(e) => setTicker(e.target.value)}
+          className="border p-2 rounded-md w-full text-gray-700 "
         />
       </div>
 
       <div>
-        <label className="block text-gray-700 mb-2 text-lg font-medium">Start Date:</label>
+        <label className="block text-sm text-gray-700 font-medium">Select Date Range:</label>
+        <div className="flex gap-2">
+          <button
+            className={`p-2 rounded-md text-gray-700  ${preset === "1m" ? "bg-blue-300 text-white" : "bg-gray-200"}`}
+            onClick={() => handlePresetChange("1m")}
+          >
+            Last Month
+          </button>
+          <button
+            className={`p-2 rounded-md text-gray-700 ${preset === "1y" ? "bg-blue-300 text-white" : "bg-gray-200"}`}
+            onClick={() => handlePresetChange("1y")}
+          >
+            Last Year
+          </button>
+          <button
+            className={`p-2 rounded-md text-gray-700 ${preset === "5y" ? "bg-blue-300 text-white" : "bg-gray-200"}`}
+            onClick={() => handlePresetChange("5y")}
+          >
+            Last 5 Years
+          </button>
+          <button
+            className={`p-2 rounded-md text-gray-700 ${preset === "custom" ? "bg-blue-300 text-white" : "bg-gray-200"}`}
+            onClick={() => handlePresetChange("custom")}
+          >
+            Custom
+          </button>
+        </div>
+      </div>
+      <div>
+        <label className="block text-sm text-gray-700 font-medium">Start Date:</label>
         <DatePicker
           selected={startDate}
-          onChange={(date) => {
-            setStartDate(date);
-            validateInputs(date, endDate, ticker);
-          }}
-          className="border p-2 rounded-md w-full text-gray-700"
+          onChange={(date) => setStartDate(date)}
+          className="border p-2 text-gray-700 rounded-md w-full border-gray-800"
           dateFormat="yyyy-MM-dd"
-          maxDate={new Date()} 
+          maxDate={new Date()}
+          disabled={preset !== "custom"}
         />
       </div>
-
       <div>
-        <label className="block text-gray-700 mb-2 text-sm font-medium">End Date:</label>
+        <label className="block text-sm text-gray-700 font-medium">End Date:</label>
         <DatePicker
           selected={endDate}
-          onChange={(date) => {
-            setEndDate(date);
-            validateInputs(startDate, date, ticker);
-          }}
-          className="border p-2 rounded-md w-full text-gray-700"
+          onChange={(date) => setEndDate(date)}
+          className="border p-2 text-gray-700 rounded-md w-full border-gray-800"
           dateFormat="yyyy-MM-dd"
           maxDate={new Date()} 
+          disabled={preset !== "custom"}
         />
       </div>
-
       {error && <p className="text-red-500 text-sm">{error}</p>}
-
       <button
         onClick={handleSearch}
         className="bg-blue-600 text-white p-2 rounded-md disabled:opacity-50"
-        disabled={!ticker.trim() || !startDate || !endDate || !!error} 
+        disabled={!ticker.trim() || !startDate || !endDate}
       >
         Search
       </button>
